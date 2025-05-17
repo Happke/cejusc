@@ -1,11 +1,11 @@
+# Ignorar o próprio .gitignore após configurado
+.gitignore
+
 # Ignorar arquivos de ambiente
 .env
 
 # Ignorar arquivos de credenciais e tokens
 *.json
-token.json
-client_secret.json
-client_secret2.json
 
 # Ignorar arquivos de log
 *.log
@@ -25,5 +25,5 @@ Thumbs.db
 # Ignorar ferramentas de build
 bfg.jar
 
-# Ignorar scripts de deploy (se preferir manter só local)
+# Ignorar scripts de deploy (mantidos apenas localmente)
 dep.bat
