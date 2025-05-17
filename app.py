@@ -6,6 +6,7 @@ from googleapiclient.discovery import build
 
 app = Flask(__name__)
 
+# Carregar os conteúdos JSON diretamente das variáveis de ambiente
 GOOGLE_TOKEN_JSON = os.getenv("GOOGLE_TOKEN_JSON")
 GOOGLE_TOKEN = json.loads(GOOGLE_TOKEN_JSON)
 
