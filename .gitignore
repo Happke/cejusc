@@ -1,3 +1,29 @@
+# Ignorar arquivos de ambiente
+.env
+
+# Ignorar arquivos de credenciais e tokens
+*.json
 token.json
 client_secret.json
 client_secret2.json
+
+# Ignorar arquivos de log
+*.log
+
+# Ignorar arquivos compilados Python
+__pycache__/
+*.py[cod]
+
+# Ignorar ambientes virtuais
+.venv/
+venv/
+
+# Ignorar arquivos temporários do sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar ferramentas de build
+bfg.jar
+
+# Ignorar scripts de deploy (se preferir manter só local)
+dep.bat
