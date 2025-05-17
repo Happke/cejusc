@@ -6,12 +6,7 @@ from googleapiclient.discovery import build
 
 app = Flask(__name__)
 
-# Carrega os conteúdos JSON das variáveis de ambiente
-GOOGLE_CLIENT_SECRET_JSON = os.getenv("GOOGLE_CLIENT_SECRET_JSON")
 GOOGLE_TOKEN_JSON = os.getenv("GOOGLE_TOKEN_JSON")
-
-# Converte o JSON carregado para dicionários Python
-GOOGLE_CLIENT_SECRET = json.loads(GOOGLE_CLIENT_SECRET_JSON)
 GOOGLE_TOKEN = json.loads(GOOGLE_TOKEN_JSON)
 
 def get_google_sheets_data(spreadsheet_id, range_name):
