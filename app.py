@@ -1,52 +1,56 @@
-from flask import Flask, render_template, request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
+from flask import Flask, render_template_string, request
 import os
+import json
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
 app = Flask(__name__)
 
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+# Carregar as credenciais a partir das variáveis de ambiente
+GOOGLE_CLIENT_SECRET = json.loads(os.getenv("GOOGLE_CLIENT_SECRET_JSON"))
+GOOGLE_TOKEN = json.loads(os.getenv("GOOGLE_TOKEN_JSON"))
 
-# Mapeamento das Planilhas e Abas Correto
-PLANILHAS = {
-    'PAUTAC2': {
-        'id': '10T3xDfkqk-sObMk2EffHVgxYd8jFPuOjUXGD4HcoYNM',
-        'range': 'REGISTRO_AUDIÊNCIAS!A1:C10'
-    },
-    'Painel BI': {
-        'id': '1CP_2U-HQ8IzfADuoITa2iA9uAC2X1eQ-Mj9ySC4QJ-g',
-        'range': 'METAS!A1:C10'
-    }
-}
-
-def get_google_sheets_data(planilha_id, range_name):
-    creds = None
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    if not creds or not creds.valid:
-        flow = InstalledAppFlow.from_client_secrets_file('client_secret.json', SCOPES)
-        creds = flow.run_local_server(port=0)
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
-
+def get_google_sheets_data(spreadsheet_id, range_name):
+    creds = Credentials.from_authorized_user_info(GOOGLE_TOKEN)
     service = build('sheets', 'v4', credentials=creds)
     sheet = service.spreadsheets()
-    result = sheet.values().get(spreadsheetId=planilha_id, range=range_name).execute()
+    result = sheet.values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
     return result.get('values', [])
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
-    selected_planilha = 'PAUTAC2'  # Valor padrão
-    data = []
+    return render_template_string('''
+        <h1>Consulta Planilhas CEJUSC</h1>
+        <form action="/ver_dados" method="post">
+            <label>ID da Planilha:</label><br>
+            <input type="text" name="spreadsheet_id" value="10T3xDfkqk-sObMk2EffHVgxYd8jFPuOjUXGD4HcoYNM"><br>
+            <label>Nome da Aba e Intervalo (ex: METAS!A1:C10):</label><br>
+            <input type="text" name="range_name" value="METAS!A1:C10"><br>
+            <button type="submit">Ver Dados</button>
+        </form>
+    ''')
 
-    if request.method == 'POST':
-        selected_planilha = request.form.get('planilha')
-        planilha_info = PLANILHAS.get(selected_planilha)
-        if planilha_info:
-            data = get_google_sheets_data(planilha_info['id'], planilha_info['range'])
+@app.route('/ver_dados', methods=['POST'])
+def ver_dados():
+    spreadsheet_id = request.form['spreadsheet_id']
+    range_name = request.form['range_name']
+    try:
+        data = get_google_sheets_data(spreadsheet_id, range_name)
+        return render_template_string('''
+            <h1>Dados da Planilha</h1>
+            <table border="1">
+                {% for row in data %}
+                    <tr>
+                        {% for cell in row %}
+                            <td>{{ cell }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </table>
+            <a href="/">Voltar</a>
+        ''', data=data)
+    except Exception as e:
+        return f"<h1>Erro ao buscar dados</h1><p>{str(e)}</p><a href='/'>Voltar</a>"
 
-    return render_template('index.html', data=data, planilhas=PLANILHAS.keys(), selected=selected_planilha)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
